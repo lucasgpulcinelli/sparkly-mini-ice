@@ -1,0 +1,61 @@
+services:
+  spark-master:
+    image: spark:3.5.2-java17
+    user: "root"
+    ports:
+      - "4040:4040"
+      - "8080:8080"
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+    volumes:
+      - ./extra-jars/hadoop-aws-3.3.4.jar:/opt/spark/jars/hadoop-aws-3.3.4.jar:ro
+      - ./extra-jars/aws-java-sdk-bundle-1.12.262.jar:/opt/spark/jars/aws-java-sdk-bundle-1.12.262.jar:ro
+      - ./extra-jars/iceberg-spark-runtime-3.5_2.12-1.6.1.jar:/opt/spark/jars/iceberg-spark-runtime-3.5_2.12-1.6.1.jar:ro
+      - ./spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+      - /tmp/spark-shared:/tmp/spark-shared:rw
+    deploy:
+      resources:
+        limits:
+          cpus: 2.0
+          memory: 4g
+
+  spark-worker-01: &worker
+    image: spark:3.5.2-java17
+    user: "root"
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./extra-jars/hadoop-aws-3.3.4.jar:/opt/spark/jars/hadoop-aws-3.3.4.jar:ro
+      - ./extra-jars/aws-java-sdk-bundle-1.12.262.jar:/opt/spark/jars/aws-java-sdk-bundle-1.12.262.jar:ro
+      - ./extra-jars/iceberg-spark-runtime-3.5_2.12-1.6.1.jar:/opt/spark/jars/iceberg-spark-runtime-3.5_2.12-1.6.1.jar:ro
+      - ./spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+    environment:
+      SPARK_WORKER_CORES: 4
+      SPARK_WORKER_MEMORY: 2g
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    deploy:
+      resources:
+        limits:
+          cpus: 4.0
+          memory: 3g
+
+  spark-worker-02:
+    <<: *worker
+    ports:
+      - "8082:8081"
+
+  minio:
+    image: quay.io/minio/minio
+    volumes:
+      - ./minio_data:/data:rw
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minio-spark-example
+      MINIO_ROOT_PASSWORD: minio-spark-example
+    command: server /data --console-address ":9001"
+    deploy:
+      resources:
+        limits:
+          cpus: 2.0
+          memory: 2g
