@@ -10,10 +10,12 @@ To deploy spark and two worker nodes, plus the necessary MinIO backend, first ad
 After that, you should be able to run `docker compose up`, acess http://localhost:8080 and see the Spark UI with two workers active, and acess http://localhost:900 and see the MinIO UI (to login, use minio-spark-example as both the login and password).
 
 ## Preparing dataset
-The dataset we will use is about UK housing prices from 1995 to 2023, the objective is to do some queries using the dataset such as different aggregations by region and date
+The dataset we will use is about UK housing prices from 1995 to 2023, the objective is to do some queries using the dataset such as different aggregations by region and date.
+
+To setup the Iceberg table in MinIO, use `./scripts/prepare.sh` (run as root if docker is not in rootless mode)
 
 ## Running the code
-To send the python code to be executed by the workers, use `./scripts/send-py.sh ./src/main.py` (run as root if docker is not in rootless mode)
+To send the python code to be executed by the workers, use `./scripts/execute.sh` (run as root if docker is not in rootless mode)
 
 ## Made fully by
 - Lucas Eduardo Gulka Pulcinelli
