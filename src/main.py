@@ -9,19 +9,34 @@ spark = (
 )
 
 df = spark.sql("""
-    WITH max_no_transfers AS (
+    WITH
+    count_transfers AS (
         SELECT
-            COUNT(*) AS no_of_transfers, postcode
-        FROM testtable
-        WHERE City = 'LONDON' AND postcode IS NOT NULL
-        GROUP BY postcode
-        ORDER BY no_of_transfers DESC
-        LIMIT 1
+            postcode,
+            EXTRACT(YEAR FROM Date_of_Transfer) AS year,
+            COUNT(*) AS count
+        FROM uk_pricing
+        WHERE postcode IS NOT NULL
+        GROUP BY postcode, year
+    ),
+    max_count_transfers AS (
+        SELECT FIRST(c.postcode) AS postcode, c.year, c.count
+        FROM count_transfers c
+            JOIN (
+                SELECT year, MAX(count) AS count
+                FROM count_transfers
+                GROUP BY year
+            ) cm
+                ON cm.count = c.count AND cm.year = c.year
+        GROUP BY c.year, c.count
     )
-    SELECT t.Transaction_unique_identifier, t.postcode, t.Date_of_Transfer, t.price
-    FROM testtable t
-        JOIN max_no_transfers m ON t.postcode = m.postcode
-    ORDER BY t.Date_of_Transfer DESC
+    SELECT p.Transaction_unique_identifier, p.Date_of_Transfer, p.postcode, p.price
+    FROM uk_pricing p
+        JOIN max_count_transfers m
+
+            ON p.postcode = m.postcode
+            AND m.year = EXTRACT(YEAR FROM p.Date_of_Transfer)
+    ORDER BY p.Date_of_Transfer DESC
 """)
 
 arr = df.collect()

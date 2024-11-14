@@ -31,19 +31,24 @@ schema = """
 df = spark.read.csv("/tmp/spark-shared/202304.csv", schema=schema)
 
 spark.sql(f"""
-    CREATE TABLE testtable (
+    CREATE OR REPLACE TABLE uk_pricing (
         {schema}
     )
     USING iceberg
+    PARTITIONED BY (year(Date_of_Transfer))
     TBLPROPERTIES ('format-version'='2')
-    ;
+""")
+
+spark.sql("""
+    ALTER TABLE uk_pricing
+    WRITE ORDERED BY City
 """)
 
 df.registerTempTable("csv_data")
 
 spark.sql("""
-    INSERT INTO testtable
-    SELECT * FROM csv_data;
+    INSERT INTO uk_pricing
+    SELECT * FROM csv_data
 """)
 
 print("done!")
