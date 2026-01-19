@@ -1,5 +1,5 @@
 # Sparkly Mini Ice
-This repository is a toy deployment of Apache Spark in standalone mode using docker-compose, with MinIO as a storage backend and Apache Iceberg as the default catalog, with a local filesystem metadata management (on the master node).
+This repository is a toy deployment of Apache Spark in standalone mode using docker-compose, with MinIO as a storage backend and Apache Iceberg as the table format, with a local filesystem metadata management (on the master node).
 
 The objective of the repo is to show an example of what Spark is capable of in a presentation for the university discipline "Distributed Computing Systems".
 
